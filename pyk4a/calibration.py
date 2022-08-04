@@ -46,6 +46,22 @@ class Calibration:
     def color_resolution(self) -> ColorResolution:
         return self._color_resolution
 
+
+    def color_2d_to_depth_2d(self, source_point_2d: Tuple[float, float], depth_image: np.ndarray) -> Tuple[float, float]:
+        res, valid, target_point_2d = k4a_module.calibration_color_2d_to_depth_2d(
+            self._calibration_handle,
+            self.thread_safe,
+            source_pixel_2d,
+            depth_image
+        )
+
+        _verify_error(res)
+        if valid == 0:
+            raise ValueError(f"Coordinates {source_pixel_2d} are not valid in the calibration model")
+
+        return target_point_3d
+
+
     def _convert_3d_to_3d(
         self,
         source_point_3d: Tuple[float, float, float],

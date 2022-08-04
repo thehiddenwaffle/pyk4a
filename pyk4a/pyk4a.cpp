@@ -950,6 +950,41 @@ static PyObject *capture_get_ir_image(PyObject *self, PyObject *args) {
   }
 }
 
+static PyObject *calibration_color_2d_to_depth_2d(PyObject *self, PyObject *args) {
+  k4a_calibration_t *calibration_handle;
+  PyObject *capsule;
+  int thread_safe;
+  PyThreadState *thread_state;
+  k4a_result_t res;
+  k4a_float2_t source_point2d;
+  PyArrayObject *in_depth_array;
+  k4a_float2_t target_point2d;
+  int valid;
+  float source_point_x;
+  float source_point_y;
+
+  PyArg_ParseTuple(args, "Op(ff)O!", &capsule, &thread_safe, &source_point_x, &source_point_y, &in_depth_array, &PyArray_Type);
+  calibration_handle = (k4a_calibration_t *)PyCapsule_GetPointer(capsule, CAPSULE_CALIBRATION_NAME);
+
+  k4a_image_t depth_image;
+  res = numpy_to_k4a_image(in_depth_array, &depth_image, K4A_IMAGE_FORMAT_DEPTH16);
+
+  source_point2d.xy.x = source_point_x;
+  source_point2d.xy.y = source_point_y;
+
+  thread_state = _gil_release(thread_safe);
+  if (K4A_RESULT_SUCCEEDED == res) {
+    res = k4a_calibration_color_2d_to_depth_2d(calibration_handle, &source_point2d, depth_image, &target_point2d, &valid);
+    k4a_image_release(depth_image);
+  }
+  _gil_restore(thread_state);
+  if (res == K4A_RESULT_FAILED) {
+    return Py_BuildValue("IIN", res, valid, Py_None);
+  }
+  // Return object...
+  return Py_BuildValue("II(ff)", res, valid, target_point2d.xy.x, target_point2d.xy.y);
+}
+
 static PyObject *calibration_3d_to_3d(PyObject *self, PyObject *args) {
   k4a_calibration_t *calibration_handle;
   PyObject *capsule;
@@ -1476,6 +1511,8 @@ static PyMethodDef Pyk4aMethods[] = {
      "Transforms the color image into the geometry of the depth camera."},
     {"transformation_depth_image_to_point_cloud", transformation_depth_image_to_point_cloud, METH_VARARGS,
      "Transforms the depth map to a point cloud."},
+    {"calibration_color_2d_to_depth_2d", calibration_color_2d_to_depth_2d, METH_VARARGS,
+    "Transform a 2D pixel coordinate from color camera into a 2D pixel coordinate of the depth camera."},
     {"calibration_3d_to_3d", calibration_3d_to_3d, METH_VARARGS, "Transforms the coordinates between 2 3D systems"},
     {"calibration_2d_to_3d", calibration_2d_to_3d, METH_VARARGS,
      "Transforms the coordinates between a pixel and a 3D system"},
