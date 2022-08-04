@@ -19,7 +19,7 @@ setup:
 	pip install -r requirements-dev.txt
 
 build:
-	pip install -e .
+	pip install -e . --prefix /home/tgt-jet/.local
 
 fmt:
 	isort  $(SOURCES)
