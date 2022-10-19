@@ -93,7 +93,7 @@ class PyK4A:
 
     def _start_cameras(self):
         if config.color_format != ImageFormat.COLOR_MJPG:
-              print("Color format not set to MJPG, NVJPEG decoding will be unavailable")
+            print("Color format not set to MJPG, NVJPEG decoding will be unavailable")
         res = k4a_module.device_start_cameras(self._device_handle, self.thread_safe, *self._config.unpack())
         _verify_error(res)
 
