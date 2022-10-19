@@ -16,10 +16,11 @@ from .transformation import (
 
 class PyK4ACapture:
     def __init__(
-        self, calibration: Calibration, capture_handle: object, color_format: ImageFormat, thread_safe: bool = True
+        self, calibration: Calibration, capture_handle: object, color_format: ImageFormat, jpeg_handle: object, thread_safe: bool = True
     ):
         self._calibration: Calibration = calibration
         self._capture_handle: object = capture_handle  # built-in PyCapsule
+        self._jpeg_handle: object = jpeg_handle  # built-in PyCapsule
         self.thread_safe = thread_safe
         self._color_format = color_format
 
@@ -39,6 +40,19 @@ class PyK4ACapture:
         self._transformed_depth_point_cloud: Optional[np.ndarray] = None
         self._transformed_color: Optional[np.ndarray] = None
         self._transformed_ir: Optional[np.ndarray] = None
+
+
+    @property
+    def color_nvjpeg(self) -> Optional[np.ndarray]:
+        assert self._jpeg_handle is not None, "Capture does not have an NVJpegDecoder instance, check configuration"
+        if self._color is None:
+            (
+                self._color,
+                self._color_timestamp_usec,
+                self._color_system_timestamp_nsec,
+            ) = k4a_module.capture_get_color_image_nvjpeg(self._capture_handle, self._jpeg_handle, self.thread_safe)
+        return self._color
+
 
     @property
     def color(self) -> Optional[np.ndarray]:

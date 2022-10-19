@@ -58,13 +58,13 @@ def detect_and_insert_sdk_include_and_library_dirs(include_dirs, library_dirs) -
         library_dirs.insert(0, library_dir)
 
 
-include_dirs = [get_numpy_include()]
-library_dirs = []
+include_dirs = [get_numpy_include(), "/usr/src/jetson_multimedia_api/include", "/usr/src/jetson_multimedia_api/include/libjpeg-8b", "/usr/include", "/usr/include/libdrm"]
+library_dirs = ["/usr/lib/aarch64-linux-gnu/", "/usr/lib/aarch64-linux-gnu/tegra"]
 detect_and_insert_sdk_include_and_library_dirs(include_dirs, library_dirs)
 module = Extension(
     "k4a_module",
     sources=["pyk4a/pyk4a.cpp"],
-    libraries=["k4a", "k4arecord"],
+    libraries=["k4a", "k4arecord", "pthread", "v4l2", "EGL", "GLESv2", "X11", "nvbuf_utils", "nvjpeg", "nvosd", "drm"],
     include_dirs=include_dirs,
     library_dirs=library_dirs,
 )

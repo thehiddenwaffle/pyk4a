@@ -22,6 +22,7 @@ class PyK4A:
         self._config: Config = config if (config is not None) else Config()
         self.thread_safe = thread_safe
         self._device_handle: Optional[object] = None
+        self._jpeg_handle: Optional[object] = None
         self._calibration: Optional[Calibration] = None
         self.is_running = False
 
@@ -80,9 +81,10 @@ class PyK4A:
         self.calibration_raw = calibration
 
     def _device_open(self):
-        res, handle = k4a_module.device_open(self._device_id, self.thread_safe)
+        res, device_handle, jpeg_handle = k4a_module.device_open(self._device_id, self.thread_safe)
         _verify_error(res)
-        self._device_handle = handle
+        self._device_handle = device_handle
+        self._jpeg_handle = jpeg_handle
 
     def _device_close(self):
         res = k4a_module.device_close(self._device_handle, self.thread_safe)
@@ -90,6 +92,8 @@ class PyK4A:
         self._device_handle = None
 
     def _start_cameras(self):
+        if config.color_format != ImageFormat.COLOR_MJPG:
+              print("Color format not set to MJPG, NVJPEG decoding will be unavailable")
         res = k4a_module.device_start_cameras(self._device_handle, self.thread_safe, *self._config.unpack())
         _verify_error(res)
 
@@ -133,6 +137,7 @@ class PyK4A:
             capture_handle=capture_capsule,
             color_format=self._config.color_format,
             thread_safe=self.thread_safe,
+	    jpeg_handle=self._jpeg_handle
         )
         return capture
 
